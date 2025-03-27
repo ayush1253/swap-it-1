@@ -81,7 +81,7 @@ export default function UserProducts() {
           <Package className="h-8 w-8 text-muted-foreground" />
         </div>
         <h3 className="text-lg font-semibold mb-2">No products found</h3>
-        <p className="text-muted-foreground">You haven't uploaded any products yet.</p>
+        <p className="text-muted-foreground">You haven&apos;t uploaded any products yet.</p>
       </div>
     );
   }

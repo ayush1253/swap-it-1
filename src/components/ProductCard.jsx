@@ -111,7 +111,7 @@ export default function ProductCard({ product }) {
               <DialogHeader>
                 <DialogTitle>Contact Seller</DialogTitle>
                 <DialogDescription>
-                  Here are the seller's contact details to proceed with your purchase.
+                  Here are the seller&apos;s contact details to proceed with your purchase.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
