@@ -12,6 +12,8 @@ export default function UploadProductForm() {
     condition: '',
     college: '',
     image: null,
+    contact: '',
+    location: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -41,7 +43,9 @@ export default function UploadProductForm() {
 
     try {
       // Validate all required fields
-      if (!product.title || !product.description || !product.price || !product.category || !product.condition || !product.college || !product.image) {
+      if (!product.title || !product.description || !product.price || !product.category || 
+          !product.condition || !product.college || !product.image || !product.contact || 
+          !product.location) {
         throw new Error('Please fill in all required fields');
       }
 
@@ -73,7 +77,13 @@ export default function UploadProductForm() {
         body: JSON.stringify(productData),
       });
 
-      const data = await response.json();
+      let data;
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        throw new Error('Server returned non-JSON response');
+      }
 
       if (!response.ok) {
         throw new Error(data.error || 'Failed to upload product');
@@ -83,7 +93,7 @@ export default function UploadProductForm() {
       router.push('/');
     } catch (err) {
       console.error('Upload error:', err); // Debug log
-      setError(err.message);
+      setError(err.message || 'An error occurred while uploading the product');
     } finally {
       setLoading(false);
     }
@@ -131,6 +141,34 @@ export default function UploadProductForm() {
           value={product.price}
           onChange={handleInputChange}
           className="w-full p-2 border rounded"
+          required
+        />
+      </div>
+
+      <div>
+        <label htmlFor="contact" className="block mb-1">Contact Information</label>
+        <input
+          type="text"
+          id="contact"
+          name="contact"
+          value={product.contact}
+          onChange={handleInputChange}
+          className="w-full p-2 border rounded"
+          placeholder="Phone number or email"
+          required
+        />
+      </div>
+
+      <div>
+        <label htmlFor="location" className="block mb-1">Location</label>
+        <input
+          type="text"
+          id="location"
+          name="location"
+          value={product.location}
+          onChange={handleInputChange}
+          className="w-full p-2 border rounded"
+          placeholder="Campus location or meeting point"
           required
         />
       </div>

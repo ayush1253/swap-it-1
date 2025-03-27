@@ -1,104 +1,89 @@
 'use client';
 
-import { useSearchParams, useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
-import ProductCard from '@/components/ProductCard';
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+import ProductCard from "@/components/ProductCard";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 
-export default function SearchResults() {
+export default function SearchPage() {
   const searchParams = useSearchParams();
-  const router = useRouter();
-  const query = searchParams.get('q');
-  const selectedCollege = searchParams.get('college') || '';
+  const query = searchParams.get("q") || "";
+  const [searchQuery, setSearchQuery] = useState(query);
   const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [colleges, setColleges] = useState([]);
-  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setLoading(true);
-        setError('');
-        
-        // Build the API URL with query parameters
-        const params = new URLSearchParams();
-        if (query) params.append('q', query);
-        if (selectedCollege) params.append('college', selectedCollege);
-        
-        const response = await fetch(`/api/products?${params.toString()}`);
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch products');
-        }
-        
-        const data = await response.json();
-        setProducts(data);
-        
-        // Get unique colleges from the products
-        const uniqueColleges = [...new Set(data.map(product => product.college))];
-        setColleges(uniqueColleges);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProducts();
-  }, [query, selectedCollege]);
-
-  const handleCollegeChange = (e) => {
-    const newCollege = e.target.value;
-    const params = new URLSearchParams(searchParams);
-    if (newCollege) {
-      params.set('college', newCollege);
-    } else {
-      params.delete('college');
+    if (query) {
+      handleSearch(query);
     }
-    router.push(`/search?${params.toString()}`);
+  }, [query]);
+
+  const handleSearch = async (searchQuery) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`/api/products/search?q=${encodeURIComponent(searchQuery)}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch products');
+      }
+      const data = await response.json();
+      setProducts(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setError(err.message);
+      setProducts([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
-      </div>
-    );
-  }
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      handleSearch(searchQuery);
+    }
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+      <h1 className="text-3xl font-bold mb-8">Search Products</h1>
+      
+      <form onSubmit={handleSubmit} className="mb-8">
+        <div className="flex gap-4">
+          <Input
+            type="text"
+            placeholder="Search products..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="flex-1"
+          />
+          <Button type="submit" disabled={loading}>
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Searching...
+              </>
+            ) : (
+              "Search"
+            )}
+          </Button>
+        </div>
+      </form>
+
+      {error ? (
+        <div className="text-red-500 text-center py-8">
           {error}
         </div>
-      )}
-      
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-        <h1 className="text-3xl font-bold">
-          {query ? `Search Results for "${query}"` : 'All Products'}
-        </h1>
-        
-        <div className="flex items-center gap-4">
-          <select
-            value={selectedCollege}
-            onChange={handleCollegeChange}
-            className="p-2 border rounded-md bg-white"
-          >
-            <option value="">All Colleges</option>
-            {colleges.map((college) => (
-              <option key={college} value={college}>
-                {college}
-              </option>
-            ))}
-          </select>
+      ) : loading ? (
+        <div className="flex justify-center items-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin" />
         </div>
-      </div>
-      
-      {products.length === 0 ? (
-        <p className="text-gray-600 text-center py-8">
-          No products found matching your criteria.
-        </p>
+      ) : products.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-gray-500">No products found. Try a different search term.</p>
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {products.map((product) => (

@@ -1,13 +1,22 @@
-import { clerkMiddleware, createRouteMatcher} from "@clerk/nextjs/server";
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
+// This example protects all routes including api/trpc routes
+// Please edit this to allow other routes to be public as needed.
+// See https://clerk.com/docs/references/nextjs/auth-middleware for more information about configuring your middleware
+const publicRoutes = createRouteMatcher([
+  "/",
+  "/products",
+  "/products/:id",
+  "/api/products",
+  "/api/products/:id",
+  "/sign-in",
+  "/sign-up",
+]);
 
-const protectedRoutes = createRouteMatcher([
-    '/',
-    'prducts',
-    'aboutUs'
-])
 export default clerkMiddleware((auth, req) => {
-    if(protectedRoutes(req)) auth().protect();
+  if (!publicRoutes(req)) {
+    auth().protect();
+  }
 });
 
 export const config = {
